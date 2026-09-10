@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi KPR Interaktif</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 600px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a1a1a; margin-bottom: 25px; }
+        .input-group { margin-bottom: 15px; }
+        label { font-weight: 600; display: block; margin-bottom: 8px; color: #4a4a4a; font-size: 14px; }
+        input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        input:focus { border-color: #0056b3; outline: none; }
+        button { width: 100%; padding: 14px; background-color: #0056b3; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        button:hover { background-color: #004494; }
+        .result { margin-top: 25px; padding: 20px; background-color: #eff6ff; border-radius: 8px; text-align: center; border: 1px solid #bfdbfe; display: none; }
+        .result-title { font-size: 14px; color: #4b5563; }
+        .result-value { font-size: 28px; font-weight: bold; color: #0056b3; margin-top: 5px; }
+        
+        /* Tabel CSS */
+        .table-container { margin-top: 25px; max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; display: none; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: right; }
+        th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; font-weight: 600; color: #374151; position: sticky; top: 0; text-align: right;}
+        th:first-child, td:first-child { text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Simulasi KPR</h2>
+        
+        <div class="input-group">
+            <label>Harga Properti (Rp)</label>
+            <input type="number" id="harga" placeholder="Cth: 1000000000">
+        </div>
+        <div class="input-group">
+            <label>Uang Muka / DP (Rp)</label>
+            <input type="number" id="dp" placeholder="Cth: 200000000">
+        </div>
+        <div class="input-group">
+            <label>Suku Bunga per Tahun (%)</label>
+            <input type="number" id="bunga" placeholder="Cth: 5.5" step="0.1">
+        </div>
+        <div class="input-group">
+            <label>Tenor (Tahun)</label>
+            <input type="number" id="tenor" placeholder="Cth: 15">
+        </div>
+
+        <button onclick="hitungKPR()">Hitung Rincian</button>
+
+        <!-- Hasil Ringkasan -->
+        <div class="result" id="hasilContainer">
+            <div class="result-title">Angsuran per Bulan:</div>
+            <div class="result-value" id="hasilAngka">Rp 0</div>
+            <div class="result-title" id="rincianPlafon" style="margin-top:10px;">Plafon Pinjaman: Rp 0</div>
+        </div>
+
+        <!-- Tabel Amortisasi -->
+        <div class="table-container" id="tableContainer">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bulan</th>
+                        <th>Angsuran</th>
+                        <th>Porsi Pokok</th>
+                        <th>Porsi Bunga</th>
+                        <th>Sisa Pinjaman</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        function hitungKPR() {
+            let harga = parseFloat(document.getElementById('harga').value);
+            let dp = parseFloat(document.getElementById('dp').value);
+            let bungaTahun = parseFloat(document.getElementById('bunga').value);
+            let tenorTahun = parseFloat(document.getElementById('tenor').value);
+
+            if (isNaN(harga) || isNaN(dp) || isNaN(bungaTahun) || isNaN(tenorTahun)) {
+                alert("Mohon isi semua data dengan angka."); return;
+            }
+
+            let plafon = harga - dp;
+            let bungaBulan = (bungaTahun / 100) / 12;
+            let totalBulan = tenorTahun * 12;
+
+            // Rumus Anuitas
+            let angsuran = (plafon * bungaBulan) / (1 - Math.pow(1 + bungaBulan, -totalBulan));
+
+            document.getElementById('hasilContainer').style.display = 'block';
+            document.getElementById('hasilAngka').innerText = formatRp(angsuran);
+            document.getElementById('rincianPlafon').innerText = "Plafon Pinjaman: " + formatRp(plafon);
+
+            // Buat Tabel
+            let tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = ''; 
+            let sisaPinjaman = plafon;
+
+            for (let i = 1; i <= totalBulan; i++) {
+                let porsiBunga = sisaPinjaman * bungaBulan;
+                let porsiPokok = angsuran - porsiBunga;
+                sisaPinjaman -= porsiPokok;
+                if(sisaPinjaman < 0) sisaPinjaman = 0;
+
+                let row = `<tr>
+                    <td>${i}</td>
+                    <td>${formatRp(angsuran)}</td>
+                    <td>${formatRp(porsiPokok)}</td>
+                    <td>${formatRp(porsiBunga)}</td>
+                    <td>${formatRp(sisaPinjaman)}</td>
+                </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            }
+            document.getElementById('tableContainer').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
