@@ -2,7 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Simulasi DP, plafond, tenor, dan cicilan KPR berdasarkan bunga yang Anda input.">
 <title>Simulasi KPR by Thendri</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
@@ -20,6 +21,7 @@
   }
   *{ box-sizing: border-box; }
   html,body{ margin:0; padding:0; }
+  html{ -webkit-text-size-adjust:100%; }
   body{
     background: var(--bg);
     color: var(--ink);
@@ -39,6 +41,7 @@
     color: var(--emerald-deep);
   }
   .lede{ color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; margin: 0 0 18px; }
+  .lede a{ color:var(--emerald); font-weight:700; text-decoration:none; }
 
   .card{
     background: var(--paper);
@@ -67,7 +70,7 @@
   .rp-input input{
     border: none; outline: none; background: transparent;
     font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 600;
-    font-variant-numeric: tabular-nums; color: var(--ink); padding: 11px 0; width: 100%;
+    font-variant-numeric: tabular-nums; color: var(--ink); padding: 11px 0; width: 100%; min-width:0;
   }
   .rp-input.small input{ font-size: 15px; padding: 9px 0; }
   .rp-input.small span{ font-size: 13px; }
@@ -76,7 +79,7 @@
   .dp-chip{
     flex: 1; text-align: center; padding: 9px 4px;
     border: 1.5px solid var(--line); border-radius: 9px;
-    font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft); min-height:44px; display:flex; align-items:center; justify-content:center;
     background: #FBFCFB; cursor: pointer; user-select: none;
   }
   .dp-chip.active{ background: var(--emerald); border-color: var(--emerald); color: #fff; }
@@ -156,7 +159,7 @@
   }
   .stage-del{
     border: none; background: transparent; color: var(--ink-soft);
-    font-size: 15px; cursor: pointer; padding: 2px 4px; line-height: 1;
+    font-size: 15px; cursor: pointer; padding: 8px; line-height: 1; min-width:40px; min-height:40px;
   }
   .stage-block-inputs{ display:flex; gap: 8px; }
   .mini-field{ flex: 1; }
@@ -169,7 +172,7 @@
     width: 100%; padding: 10px; border-radius: 9px;
     border: 1.5px dashed var(--emerald); background: #EEF6F1; color: var(--emerald-deep);
     font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
-    margin-top: 2px;
+    margin-top: 2px; min-height:44px;
   }
 
   .lama-fix-wrap{ display:flex; align-items:center; gap: 10px; }
@@ -189,6 +192,21 @@
     font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
   }
   .hero-num .sub{ font-size: 11.5px; color: #CFE9DC; margin-top: 4px; }
+  .hero-num .context{ font-size: 11.5px; color: #CFE9DC; margin-top: 3px; }
+  .hero-num .summary{ display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; padding-top:9px; border-top:1px solid rgba(207,233,220,.35); }
+  .hero-num .summary-item{ display:flex; flex-direction:column; gap:1px; }
+  .hero-num .summary-label{ font-size:10.5px; color:#CFE9DC; }
+  .hero-num .summary-value{ font-size:12.5px; color:#fff; font-weight:700; font-variant-numeric:tabular-nums; }
+  .hero-num .summary-item.high{ margin-left:auto; text-align:right; }
+  .finance-summary{ border:1px solid var(--emerald); border-radius:12px; padding:13px; margin:0 0 14px; background:linear-gradient(155deg,var(--emerald-deep),var(--emerald)); color:#fff; }
+  .finance-summary-title{ font-size:11.5px; color:#CFE9DC; font-weight:700; margin-bottom:10px; }
+  .finance-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .finance-item{ min-width:0; padding:10px; background:#EAF4EF; border:1px solid #C8DED2; border-radius:9px; }
+  .finance-item.total{ grid-column:1/-1; background:#DCEDE4; border-color:#B7D4C5; }
+  .finance-label{ display:block; font-size:10.5px; color:#527064; }
+  .finance-value{ display:block; margin-top:3px; font-size:14px; font-weight:800; color:#123F32; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  .finance-item.total .finance-value{ color:var(--emerald-deep); font-size:16px; }
+  .finance-note{ font-size:10.5px; line-height:1.45; color:#CFE9DC; margin:10px 0 0; }
 
   table{ width:100%; border-collapse: collapse; font-size: 12.5px; }
   th{
@@ -215,12 +233,30 @@
   .wa-btn svg{ width: 18px; height: 18px; flex-shrink: 0; }
 
   .foot{ font-size: 11px; color: var(--ink-soft); line-height: 1.6; padding: 6px 4px 0; }
+  .jenis-chip, .dp-chip, .stage-del, .add-stage-btn, .wa-btn{ -webkit-tap-highlight-color:transparent; touch-action: manipulation; }
+  .jenis-chip{ min-height:52px; }
+  .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table{ min-width:330px; }
+  @media (max-width:360px){
+    body{ padding-left:10px; padding-right:10px; }
+    .card{ padding:13px; border-radius:12px; }
+    .dp-row{ gap:5px; }
+    .dp-chip{ padding-left:2px; padding-right:2px; font-size:12px; }
+    .stage-row{ gap:7px; }
+    .stage-label{ width:78px; font-size:11.5px; }
+    .hero-num{ padding:14px; }
+    .hero-num .val{ font-size:24px; }
+    .hero-num .summary{ gap:12px; }
+    .finance-grid{ gap:6px; }
+    .finance-item{ padding:8px; }
+    .finance-value{ font-size:12.5px; }
+  }
 </style>
 </head>
 <body>
 
   <h1>SIMULASI KPR</h1>
-  <p class="lede">Untuk detail bisa hubungi Thendri - 082283120060</p>
+  <p class="lede">Untuk detail bisa hubungi Thendri - <a href="tel:+6282283120060">082283120060</a></p>
 
   <div class="card">
     <h2>Data unit</h2>
@@ -330,7 +366,7 @@
   </button>
 
   <div class="foot">
-    Simulasi ini bersifat estimasi berdasarkan bunga yang diinput sendiri (bisa dari bank/promo mana pun, tidak terikat satu bank tertentu). Cicilan dihitung dengan metode flat/annuitas standar. Angka final cicilan, tanda jadi, dan syarat KPR mengikuti ketentuan bank dan developer yang berlaku saat pengajuan.
+    Catatan: hasil ini adalah estimasi berdasarkan bunga dan tenor yang diinput. Pada skema fix berjenjang dan fix lalu floating, cicilan dapat berubah; angka aktual serta biaya tambahan mengikuti ketentuan bank dan developer saat pengajuan.
   </div>
 
 <script>
@@ -704,6 +740,16 @@
     };
   }
 
+  function calcTotals(rows, plafond){
+    let totalCicilan = 0;
+    rows.forEach(r => {
+      const match = r.periode.match(/Tahun (\d+)-(\d+)/);
+      const years = match ? Math.max(1, parseInt(match[2], 10) - parseInt(match[1], 10) + 1) : 0;
+      totalCicilan += r.cicilan * years * 12;
+    });
+    return { totalCicilan, totalBunga: Math.max(0, totalCicilan - plafond) };
+  }
+
   // ---------- render ----------
   function render(){
     let dp;
@@ -737,13 +783,37 @@
     else result = calcFloating(plafond, state.tenor);
 
     const firstCicilan = result.rows[0].cicilan;
+    const highestCicilan = Math.max(...result.rows.map(r => r.cicilan));
+    const totals = calcTotals(result.rows, plafond);
+    const totalDanaRumah = dp + totals.totalCicilan;
+    const totalDanaKeluar = totalDanaRumah + (state.tandaJadiMode === 'luar' ? state.tandaJadi : 0);
+    const headline = state.jenis === 'flat'
+      ? 'Cicilan per bulan'
+      : state.jenis === 'floating'
+        ? 'Estimasi cicilan masa fix'
+        : 'Estimasi cicilan tahap 1';
+    const context = state.jenis === 'flat'
+      ? `Berlaku sepanjang tenor · Bunga ${fmtPct(result.rows[0].bunga)}`
+      : `${result.rows[0].periode} · Bunga ${fmtPct(result.rows[0].bunga)}`;
 
     let html = '';
     html += `<div class="scheme-note">${result.note}</div>`;
-    html += `<div class="hero-num">
-      <div class="lbl">Cicilan bulan pertama</div>
+    if(state.jenis === 'floating') html += `<div class="hero-num">
+      <div class="lbl">${headline}</div>
       <div class="val">${fmtRp(firstCicilan)}</div>
       <div class="sub">Plafond ${fmtRp(plafond)} · Tenor ${state.tenor} tahun</div>
+      <div class="context">${context}</div>
+    </div>`;
+    if(state.jenis !== 'floating') html += `<div class="finance-summary">
+      <div class="finance-summary-title">Ringkasan biaya rumah</div>
+      <div class="finance-grid">
+        <div class="finance-item"><span class="finance-label">Plafond KPR</span><span class="finance-value">${fmtRp(plafond)}</span></div>
+        <div class="finance-item"><span class="finance-label">Tenor</span><span class="finance-value">${state.tenor} tahun</span></div>
+        <div class="finance-item"><span class="finance-label">Total cicilan</span><span class="finance-value">${fmtRp(totals.totalCicilan)}</span></div>
+        <div class="finance-item"><span class="finance-label">Total bunga</span><span class="finance-value">${fmtRp(totals.totalBunga)}</span></div>
+        <div class="finance-item total"><span class="finance-label">Total dana rumah (DP + seluruh cicilan)</span><span class="finance-value">${fmtRp(totalDanaRumah)}</span></div>
+      </div>
+      ${state.tandaJadiMode === 'luar' && state.tandaJadi > 0 ? `<p class="finance-note">Karena tanda jadi di luar DP, total dana keluar termasuk tanda jadi menjadi ${fmtRp(totalDanaKeluar)}.</p>` : '<p class="finance-note">Belum termasuk biaya notaris, pajak, provisi, asuransi, dan biaya lain di luar simulasi.</p>'}
     </div>`;
     html += `<table><thead><tr><th>Periode</th><th class="num">Bunga</th><th class="num">Cicilan/bln</th></tr></thead><tbody>`;
     result.rows.forEach(r => {
@@ -801,7 +871,7 @@
       lines.push(`${r.periode} (${pctStr}): _${fmtRp(r.cicilan)}/bulan_`);
     });
     lines.push('');
-    lines.push('_Catatan: cicilan di atas estimasi flat/annuitas, angka final mengikuti perhitungan bank saat pengajuan KPR._');
+    lines.push('_Catatan: cicilan di atas adalah estimasi metode annuitas. Pada skema fix berjenjang atau floating, cicilan dapat berubah; angka final mengikuti perhitungan bank saat pengajuan KPR._');
     return lines.join('\n');
   }
 
