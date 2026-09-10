@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Simulasi KPR</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #F4F7F5;
+    --paper: #FFFFFF;
+    --ink: #142A20;
+    --ink-soft: #4B5E54;
+    --line: #DCE5DF;
+    --emerald: #0B6E4F;
+    --emerald-deep: #084F39;
+    --gold: #B8912A;
+    --gold-soft: #F4EAD1;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 18px 14px 40px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .eyebrow{ font-size: 12.5px; color: var(--emerald); font-weight: 600; }
+  h1{
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 26px;
+    line-height: 1.15;
+    margin: 4px 0 3px;
+    color: var(--emerald-deep);
+  }
+  .lede{ color: var(--ink-soft); font-size: 13.5px; line-height: 1.5; margin: 0 0 18px; }
+
+  .card{
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2{ font-size: 12.5px; color: var(--ink-soft); font-weight: 600; margin: 0 0 12px; }
+
+  label{ display:block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .field{ margin-bottom: 14px; }
+  .field:last-child{ margin-bottom: 0; }
+
+  .rp-input{
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: #FBFCFB;
+    padding: 0 12px;
+    transition: border-color .15s;
+  }
+  .rp-input:focus-within{ border-color: var(--emerald); }
+  .rp-input span{ color: var(--ink-soft); font-size: 15px; font-weight: 600; margin-right: 4px; }
+  .rp-input input{
+    border: none; outline: none; background: transparent;
+    font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 600;
+    font-variant-numeric: tabular-nums; color: var(--ink); padding: 11px 0; width: 100%;
+  }
+  .rp-input.small input{ font-size: 15px; padding: 9px 0; }
+  .rp-input.small span{ font-size: 13px; }
+
+  .dp-row{ display:flex; gap: 8px; }
+  .dp-chip{
+    flex: 1; text-align: center; padding: 9px 4px;
+    border: 1.5px solid var(--line); border-radius: 9px;
+    font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+    background: #FBFCFB; cursor: pointer; user-select: none;
+  }
+  .dp-chip.active{ background: var(--emerald); border-color: var(--emerald); color: #fff; }
+  .dp-custom{ margin-top: 8px; }
+  .dp-custom .rp-input span{ font-size: 14px; }
+  .dp-custom input{ font-size: 15px; }
+
+  .tenor-wrap{ display:flex; align-items:center; gap: 12px; }
+  input[type=range]{
+    -webkit-appearance:none; flex:1; height: 5px; border-radius: 4px;
+    background: var(--line); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--emerald); border: 3px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--emerald); cursor:pointer;
+  }
+  .tenor-val{
+    font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 20px;
+    color: var(--emerald-deep); min-width: 62px; text-align:right;
+  }
+
+  .dp-equiv{ font-size: 11.5px; color: var(--ink-soft); margin-top: 7px; }
+
+  .plafond-line{
+    display:flex; justify-content: space-between; align-items: baseline;
+    padding-top: 12px; margin-top: 4px; border-top: 1px dashed var(--line);
+    font-size: 13px; color: var(--ink-soft);
+  }
+  .plafond-line b{ color: var(--ink); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+
+  .jenis-row{ display:flex; flex-direction: column; gap: 8px; }
+  .jenis-chip{
+    display:flex; align-items:center; gap:10px;
+    padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px;
+    background: #FBFCFB; cursor: pointer;
+  }
+  .jenis-chip.active{ border-color: var(--emerald); background: #EEF6F1; }
+  .jenis-chip .dot{
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--line); flex-shrink: 0; position: relative;
+  }
+  .jenis-chip.active .dot{ border-color: var(--emerald); }
+  .jenis-chip.active .dot::after{
+    content:''; position:absolute; inset: 3px; border-radius: 50%; background: var(--emerald);
+  }
+  .jenis-chip .txt .t{ font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .jenis-chip .txt .d{ font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+
+  .stage-row{
+    display:flex; align-items:center; gap: 10px; margin-bottom: 10px;
+  }
+  .stage-row:last-child{ margin-bottom: 0; }
+  .stage-label{
+    font-size: 12.5px; font-weight: 600; color: var(--ink-soft); width: 92px; flex-shrink: 0;
+  }
+  .stage-row .rp-input{ flex: 1; }
+
+  .lama-fix-wrap{ display:flex; align-items:center; gap: 10px; }
+  .lama-fix-wrap input[type=range]{ flex: 1; }
+  .lama-fix-val{
+    font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 16px;
+    color: var(--emerald-deep); min-width: 46px; text-align:right;
+  }
+
+  .hero-num{
+    background: linear-gradient(155deg, var(--emerald-deep), var(--emerald));
+    border-radius: 12px; padding: 16px; color: #fff; margin-bottom: 14px;
+  }
+  .hero-num .lbl{ font-size: 11.5px; color: #CFE9DC; font-weight: 600; margin-bottom: 3px; }
+  .hero-num .val{
+    font-family: 'Source Serif 4', serif; font-size: 27px; font-weight: 600;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+  }
+  .hero-num .sub{ font-size: 11.5px; color: #CFE9DC; margin-top: 4px; }
+
+  table{ width:100%; border-collapse: collapse; font-size: 12.5px; }
+  th{
+    text-align: left; font-size: 10.5px; color: var(--ink-soft); font-weight: 600;
+    padding: 6px 4px; border-bottom: 1.5px solid var(--line);
+  }
+  th.num, td.num{ text-align:right; font-variant-numeric: tabular-nums; }
+  td{ padding: 8px 4px; border-bottom: 1px solid var(--line); color: var(--ink); }
+  tr:last-child td{ border-bottom: none; }
+  .rate-pill{
+    display:inline-block; background: var(--gold-soft); color: var(--gold);
+    font-weight: 700; font-size: 11.5px; padding: 2px 7px; border-radius: 20px;
+  }
+
+  .scheme-note{ font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin: 10px 0 14px; }
+
+  .wa-btn{
+    display:flex; align-items:center; justify-content:center; gap: 8px;
+    width: 100%; padding: 13px; border-radius: 11px; border: none;
+    background: #25D366; color: #06341F; font-family: 'Inter', sans-serif;
+    font-size: 14.5px; font-weight: 700; cursor: pointer; margin-bottom: 14px;
+  }
+  .wa-btn:active{ transform: scale(0.99); }
+  .wa-btn svg{ width: 18px; height: 18px; flex-shrink: 0; }
+
+  .foot{ font-size: 11px; color: var(--ink-soft); line-height: 1.6; padding: 6px 4px 0; }
+</style>
+</head>
+<body>
+
+  <h1>Simulasi KPR</h1>
+  <p class="lede">Untuk detail bisa hubungi Thendri — 082283120060</p>
+
+  <div class="card">
+    <h2>Data unit</h2>
+    <div class="field">
+      <label for="harga">Harga rumah</label>
+      <div class="rp-input">
+        <span>Rp</span>
+        <input id="harga" inputmode="numeric" value="1.570.000.000">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Uang muka (DP)</label>
+      <div class="dp-row" id="dpModeRow" style="margin-bottom:8px;">
+        <div class="dp-chip active" data-mode="pct">Persen</div>
+        <div class="dp-chip" data-mode="nominal">Nominal</div>
+      </div>
+
+      <div id="dpPctBlock">
+        <div class="dp-row" id="dpRow">
+          <div class="dp-chip" data-dp="0">0%</div>
+          <div class="dp-chip active" data-dp="10">10%</div>
+          <div class="dp-chip" data-dp="20">20%</div>
+          <div class="dp-chip" data-dp="30">30%</div>
+          <div class="dp-chip" data-dp="custom">Lain</div>
+        </div>
+        <div class="dp-custom rp-input" id="dpCustomWrap" style="display:none; margin-top:8px;">
+          <input id="dpCustom" inputmode="numeric" value="10" style="text-align:right;">
+          <span>%</span>
+        </div>
+      </div>
+
+      <div id="dpNominalBlock" style="display:none;">
+        <div class="rp-input">
+          <span>Rp</span>
+          <input id="dpNominal" inputmode="numeric" value="157.000.000">
+        </div>
+      </div>
+
+      <div class="dp-equiv" id="dpEquiv">≈ 10,0% dari harga rumah</div>
+    </div>
+
+    <div class="field">
+      <label>Tanda jadi (opsional)</label>
+      <div class="dp-row" id="tandaModeRow">
+        <div class="dp-chip active" data-tmode="termasuk">Termasuk DP</div>
+        <div class="dp-chip" data-tmode="luar">Di luar DP</div>
+      </div>
+      <div class="rp-input" style="margin-top:8px;">
+        <span>Rp</span>
+        <input id="tandaJadi" inputmode="numeric" value="20.000.000">
+      </div>
+      <div class="dp-equiv" id="tandaEquiv"></div>
+    </div>
+
+    <div class="field" style="margin-bottom:2px;">
+      <label>Tenor kredit</label>
+      <div class="tenor-wrap">
+        <input type="range" id="tenor" min="1" max="20" step="1" value="10">
+        <div class="tenor-val" id="tenorVal">10 th</div>
+      </div>
+    </div>
+
+    <div class="plafond-line">
+      <span>Plafond KPR</span>
+      <b id="plafondOut">Rp 1.413.000.000</b>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Jenis bunga</h2>
+    <div class="jenis-row" id="jenisRow">
+      <div class="jenis-chip active" data-jenis="berjenjang">
+        <div class="dot"></div>
+        <div class="txt">
+          <div class="t">Fix Berjenjang</div>
+          <div class="d">Bunga naik bertahap tiap 3 tahun</div>
+        </div>
+      </div>
+      <div class="jenis-chip" data-jenis="flat">
+        <div class="dot"></div>
+        <div class="txt">
+          <div class="t">Fix Sampai Lunas</div>
+          <div class="d">Satu bunga tetap sepanjang tenor</div>
+        </div>
+      </div>
+      <div class="jenis-chip" data-jenis="floating">
+        <div class="dot"></div>
+        <div class="txt">
+          <div class="t">Fix lalu Floating</div>
+          <div class="d">Fix di awal, lalu ganti bunga floating</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="rateCard">
+    <h2>Input bunga (%/tahun)</h2>
+    <div id="rateInputs"></div>
+  </div>
+
+  <div class="card" id="resultCard"></div>
+
+  <button class="wa-btn" id="waBtn">
+    <svg viewBox="0 0 24 24" fill="#06341F"><path d="M12.04 2c-5.5 0-9.96 4.46-9.96 9.96 0 1.76.46 3.48 1.33 5L2 22l5.2-1.36a9.94 9.94 0 0 0 4.84 1.24h.01c5.5 0 9.96-4.46 9.96-9.96C22 6.46 17.54 2 12.04 2Zm5.83 14.24c-.24.68-1.4 1.3-1.93 1.35-.5.05-1.05.24-3.52-.73-2.96-1.15-4.87-4.13-5.02-4.32-.15-.2-1.2-1.6-1.2-3.05 0-1.46.77-2.17 1.04-2.47.28-.3.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.52.25.6.85 2.07.92 2.22.07.15.12.33.02.53-.1.2-.15.32-.3.5-.15.18-.3.4-.44.53-.15.15-.3.31-.13.6.17.3.75 1.24 1.62 2 1.11.99 2.05 1.3 2.34 1.45.3.15.47.13.65-.07.18-.2.75-.87.95-1.17.2-.3.4-.25.66-.15.27.1 1.72.81 2.01.96.3.15.5.22.57.34.07.13.07.72-.17 1.4Z"/></svg>
+    Kirim simulasi ke WhatsApp
+  </button>
+
+  <div class="foot">
+    Simulasi ini bersifat estimasi berdasarkan bunga yang diinput sendiri (bisa dari bank/promo mana pun, tidak terikat satu bank tertentu). Cicilan dihitung dengan metode flat/annuitas standar. Angka final cicilan, tanda jadi, dan syarat KPR mengikuti ketentuan bank dan developer yang berlaku saat pengajuan.
+  </div>
+
+<script>
+  // ---------- finance helpers ----------
+  function annuityPayment(P, annualRate, nMonths){
+    const r = annualRate/12;
+    if(nMonths <= 0) return 0;
+    if(r === 0) return P/nMonths;
+    return P * r * Math.pow(1+r, nMonths) / (Math.pow(1+r, nMonths) - 1);
+  }
+  function balanceAfter(P, annualRate, nMonthsTotalBasis, monthsPaid){
+    const r = annualRate/12;
+    const M = annuityPayment(P, annualRate, nMonthsTotalBasis);
+    if(r === 0) return P - M*monthsPaid;
+    return P*Math.pow(1+r, monthsPaid) - M*((Math.pow(1+r, monthsPaid)-1)/r);
+  }
+  function fmtRp(n){ n = Math.round(n); return 'Rp ' + n.toLocaleString('id-ID'); }
+  function parseNum(str){ return parseInt(String(str).replace(/[^\d]/g,''), 10) || 0; }
+  function fmtInputRp(n){ return n.toLocaleString('id-ID'); }
+  function parsePct(str){
+    const v = parseFloat(String(str).replace(',', '.'));
+    return isNaN(v) ? 0 : v;
+  }
+
+  // ---------- state ----------
+  let state = {
+    harga: 1570000000,
+    dpMode: 'pct',
+    dpPct: 10,
+    dpNominal: 157000000,
+    tandaJadiMode: 'termasuk',
+    tandaJadi: 20000000,
+    tenor: 10,
+    jenis: 'berjenjang',
+    rates: { s1: 3.88, s2: 8.88, s3: 10.88, flat: 7.77, fixAwal: 3.77, floating: 8.77 },
+    lamaFix: 3
+  };
+  let lastResult = null;
+
+  const jenisLabel = {
+    berjenjang: 'Fix Berjenjang',
+    flat: 'Fix Sampai Lunas',
+    floating: 'Fix lalu Floating'
+  };
+
+  // ---------- basic inputs ----------
+  const hargaEl = document.getElementById('harga');
+  hargaEl.addEventListener('input', () => {
+    const v = parseNum(hargaEl.value);
+    hargaEl.value = fmtInputRp(v);
+    state.harga = v;
+    render();
+  });
+  hargaEl.addEventListener('blur', () => { hargaEl.value = fmtInputRp(state.harga); });
+
+  const dpModeRow = document.getElementById('dpModeRow');
+  const dpPctBlock = document.getElementById('dpPctBlock');
+  const dpNominalBlock = document.getElementById('dpNominalBlock');
+  dpModeRow.querySelectorAll('.dp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      dpModeRow.querySelectorAll('.dp-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.dpMode = chip.dataset.mode;
+      dpPctBlock.style.display = state.dpMode === 'pct' ? 'block' : 'none';
+      dpNominalBlock.style.display = state.dpMode === 'nominal' ? 'block' : 'none';
+      render();
+    });
+  });
+
+  const dpRow = document.getElementById('dpRow');
+  const dpCustomWrap = document.getElementById('dpCustomWrap');
+  const dpCustomInput = document.getElementById('dpCustom');
+  dpRow.querySelectorAll('.dp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      dpRow.querySelectorAll('.dp-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const val = chip.dataset.dp;
+      if(val === 'custom'){
+        dpCustomWrap.style.display = 'flex';
+        state.dpPct = parseNum(dpCustomInput.value);
+      } else {
+        dpCustomWrap.style.display = 'none';
+        state.dpPct = parseInt(val, 10);
+      }
+      render();
+    });
+  });
+  dpCustomInput.addEventListener('input', () => {
+    state.dpPct = parseNum(dpCustomInput.value);
+    render();
+  });
+
+  const dpNominalEl = document.getElementById('dpNominal');
+  dpNominalEl.addEventListener('input', () => {
+    const v = parseNum(dpNominalEl.value);
+    dpNominalEl.value = fmtInputRp(v);
+    state.dpNominal = v;
+    render();
+  });
+  dpNominalEl.addEventListener('blur', () => { dpNominalEl.value = fmtInputRp(state.dpNominal); });
+
+  const tandaModeRow = document.getElementById('tandaModeRow');
+  tandaModeRow.querySelectorAll('.dp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      tandaModeRow.querySelectorAll('.dp-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.tandaJadiMode = chip.dataset.tmode;
+      render();
+    });
+  });
+
+  const tandaJadiEl = document.getElementById('tandaJadi');
+  tandaJadiEl.addEventListener('input', () => {
+    const v = parseNum(tandaJadiEl.value);
+    tandaJadiEl.value = fmtInputRp(v);
+    state.tandaJadi = v;
+    render();
+  });
+  tandaJadiEl.addEventListener('blur', () => { tandaJadiEl.value = fmtInputRp(state.tandaJadi); });
+
+  const tenorEl = document.getElementById('tenor');
+  const tenorVal = document.getElementById('tenorVal');
+  tenorEl.addEventListener('input', () => {
+    state.tenor = parseInt(tenorEl.value, 10);
+    tenorVal.textContent = state.tenor + ' th';
+    if(state.lamaFix > state.tenor) state.lamaFix = state.tenor;
+    render();
+  });
+
+  // ---------- jenis bunga selector ----------
+  const jenisRow = document.getElementById('jenisRow');
+  jenisRow.querySelectorAll('.jenis-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      jenisRow.querySelectorAll('.jenis-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.jenis = chip.dataset.jenis;
+      renderRateInputs();
+      render();
+    });
+  });
+
+  // ---------- rate input builders ----------
+  function rateField(labelText, key, value){
+    return `<div class="stage-row">
+      <div class="stage-label">${labelText}</div>
+      <div class="rp-input small">
+        <input data-rate="${key}" inputmode="decimal" value="${value}">
+        <span>%</span>
+      </div>
+    </div>`;
+  }
+
+  function renderRateInputs(){
+    const el = document.getElementById('rateInputs');
+    let html = '';
+    if(state.jenis === 'berjenjang'){
+      const t = state.tenor;
+      html += rateField('Tahun 1-' + Math.min(3,t), 's1', state.rates.s1);
+      if(t > 3) html += rateField('Tahun 4-' + Math.min(6,t), 's2', state.rates.s2);
+      if(t > 6) html += rateField('Tahun 7-' + t, 's3', state.rates.s3);
+    } else if(state.jenis === 'flat'){
+      html += rateField('Tahun 1-' + state.tenor, 'flat', state.rates.flat);
+    } else if(state.jenis === 'floating'){
+      html += `<div class="stage-row">
+        <div class="stage-label">Lama fix</div>
+        <div class="lama-fix-wrap" style="flex:1;">
+          <input type="range" id="lamaFix" min="1" max="${Math.max(1,state.tenor)}" step="1" value="${state.lamaFix}">
+          <div class="lama-fix-val" id="lamaFixVal">${state.lamaFix} th</div>
+        </div>
+      </div>`;
+      html += rateField('Bunga fix', 'fixAwal', state.rates.fixAwal);
+      if(state.lamaFix < state.tenor){
+        html += rateField('Bunga floating', 'floating', state.rates.floating);
+      }
+    }
+    el.innerHTML = html;
+
+    el.querySelectorAll('input[data-rate]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        state.rates[inp.dataset.rate] = parsePct(inp.value);
+        render();
+      });
+    });
+    const lamaFixEl = document.getElementById('lamaFix');
+    if(lamaFixEl){
+      lamaFixEl.addEventListener('input', () => {
+        state.lamaFix = parseInt(lamaFixEl.value, 10);
+        document.getElementById('lamaFixVal').textContent = state.lamaFix + ' th';
+        renderRateInputs();
+        render();
+      });
+    }
+  }
+
+  // ---------- scheme calculators ----------
+  function calcBerjenjang(plafond, tenor){
+    const r1 = state.rates.s1/100, r2 = state.rates.s2/100, r3 = state.rates.s3/100;
+    const basis = tenor*12;
+    const rows = [];
+    const m1 = Math.min(3, tenor);
+    const M1 = annuityPayment(plafond, r1, basis);
+    rows.push({periode: `Tahun 1-${m1}`, bunga: r1, cicilan: M1});
+    let bal = balanceAfter(plafond, r1, basis, m1*12);
+
+    if(tenor > 3){
+      const m2 = Math.min(6, tenor) - 3;
+      const M2 = annuityPayment(bal, r2, basis - 3*12);
+      rows.push({periode: `Tahun 4-${Math.min(6,tenor)}`, bunga: r2, cicilan: M2});
+      bal = balanceAfter(bal, r2, basis - 3*12, m2*12);
+
+      if(tenor > 6){
+        const M3 = annuityPayment(bal, r3, basis - 6*12);
+        rows.push({periode: `Tahun 7-${tenor}`, bunga: r3, cicilan: M3});
+        bal = balanceAfter(bal, r3, basis - 6*12, (tenor-6)*12);
+      }
+    }
+    return {rows, note: 'Bunga tiap tahap diisi manual sesuai penawaran bank.', finalBalance: bal};
+  }
+
+  function calcFlat(plafond, tenor){
+    const r = state.rates.flat/100;
+    const M = annuityPayment(plafond, r, tenor*12);
+    return {
+      rows: [{periode: `Tahun 1-${tenor}`, bunga: r, cicilan: M}],
+      note: 'Bunga tetap sama sepanjang tenor sampai lunas.',
+      finalBalance: 0
+    };
+  }
+
+  function calcFloating(plafond, tenor){
+    const rFix = state.rates.fixAwal/100;
+    const lama = Math.min(state.lamaFix, tenor);
+    const basis = tenor*12;
+    const M1 = annuityPayment(plafond, rFix, basis);
+    const rows = [{periode: `Tahun 1-${lama}`, bunga: rFix, cicilan: M1}];
+    let bal = balanceAfter(plafond, rFix, basis, lama*12);
+    if(lama < tenor){
+      const rFloat = state.rates.floating/100;
+      const M2 = annuityPayment(bal, rFloat, (tenor-lama)*12);
+      rows.push({periode: `Tahun ${lama+1}-${tenor}`, bunga: rFloat, cicilan: M2});
+      bal = balanceAfter(bal, rFloat, (tenor-lama)*12, (tenor-lama)*12);
+    }
+    return {
+      rows,
+      note: lama < tenor
+        ? 'Bunga floating di atas hanya estimasi/skenario — bunga floating riil ditentukan bank saat berjalan.'
+        : 'Lama fix sama dengan tenor, jadi seluruh cicilan pakai bunga fix.',
+      finalBalance: bal
+    };
+  }
+
+  // ---------- render ----------
+  function render(){
+    let dp;
+    if(state.dpMode === 'pct'){
+      dp = state.harga * (state.dpPct/100);
+      const pctShown = state.harga > 0 ? (dp/state.harga*100) : 0;
+      document.getElementById('dpEquiv').textContent = `≈ ${fmtRp(dp)}`;
+    } else {
+      dp = Math.min(state.dpNominal, state.harga);
+      const pctShown = state.harga > 0 ? (dp/state.harga*100) : 0;
+      document.getElementById('dpEquiv').textContent = `≈ ${pctShown.toFixed(1)}% dari harga rumah`;
+    }
+    const plafond = state.harga - dp;
+    document.getElementById('plafondOut').textContent = fmtRp(plafond);
+
+    const tj = Math.min(state.tandaJadi, state.tandaJadiMode === 'termasuk' ? dp : Infinity);
+    if(state.tandaJadi > 0){
+      if(state.tandaJadiMode === 'termasuk'){
+        const sisaDp = Math.max(dp - tj, 0);
+        document.getElementById('tandaEquiv').textContent = `Bagian dari DP — sisa DP dibayar: ${fmtRp(sisaDp)}`;
+      } else {
+        document.getElementById('tandaEquiv').textContent = `Di luar DP — total dibayar di awal (tanda jadi + DP): ${fmtRp(state.tandaJadi + dp)}`;
+      }
+    } else {
+      document.getElementById('tandaEquiv').textContent = '';
+    }
+
+    let result;
+    if(state.jenis === 'berjenjang') result = calcBerjenjang(plafond, state.tenor);
+    else if(state.jenis === 'flat') result = calcFlat(plafond, state.tenor);
+    else result = calcFloating(plafond, state.tenor);
+
+    const firstCicilan = result.rows[0].cicilan;
+
+    let html = '';
+    html += `<div class="scheme-note">${result.note}</div>`;
+    html += `<div class="hero-num">
+      <div class="lbl">Cicilan bulan pertama</div>
+      <div class="val">${fmtRp(firstCicilan)}</div>
+      <div class="sub">Plafond ${fmtRp(plafond)} · Tenor ${state.tenor} tahun</div>
+    </div>`;
+    html += `<table><thead><tr><th>Periode</th><th class="num">Bunga</th><th class="num">Cicilan/bln</th></tr></thead><tbody>`;
+    result.rows.forEach(r => {
+      html += `<tr>
+        <td>${r.periode}</td>
+        <td class="num"><span class="rate-pill">${r.bunga*100 % 1 === 0 ? (r.bunga*100).toFixed(0) : (r.bunga*100).toFixed(2)}%</span></td>
+        <td class="num">${fmtRp(r.cicilan)}</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+
+    document.getElementById('resultCard').innerHTML = html;
+
+    lastResult = { result, plafond, dp };
+  }
+
+  // ---------- kirim ke WhatsApp ----------
+  function buildWaText(){
+    if(!lastResult) return '';
+    const { result, plafond, dp } = lastResult;
+    const hasTanda = state.tandaJadi > 0;
+    const isTermasuk = state.tandaJadiMode === 'termasuk';
+
+    let lines = [];
+    lines.push('*Simulasi Kredit*');
+    lines.push('');
+
+    if(hasTanda && isTermasuk){
+      lines.push(`Harga Rumah: *${fmtRp(state.harga)}*`);
+    } else {
+      lines.push(`Harga Rumah: ${fmtRp(state.harga)}`);
+    }
+    lines.push(`DP: ${fmtRp(dp)}`);
+
+    if(hasTanda){
+      const label = isTermasuk ? '_(termasuk DP)_' : '_(di luar DP)_';
+      lines.push(`Tanda Jadi: ${fmtRp(state.tandaJadi)} ${label}`);
+      lines.push('');
+      if(isTermasuk){
+        const sisaDp = Math.max(dp - state.tandaJadi, 0);
+        lines.push(`sisa DP yang dibayar : _${fmtRp(sisaDp)}_`);
+      }
+    }
+
+    if(hasTanda && !isTermasuk){
+      lines.push(`Plafond KPR: _*${fmtRp(plafond)}*_`);
+    } else {
+      lines.push(`Plafond KPR: ${fmtRp(plafond)}`);
+    }
+    lines.push(`Tenor: *${state.tenor} tahun*`);
+    lines.push(`Skema Bunga: *${jenisLabel[state.jenis]}*`);
+    lines.push('');
+    result.rows.forEach(r => {
+      const pctStr = r.bunga*100 % 1 === 0 ? (r.bunga*100).toFixed(0) : (r.bunga*100).toFixed(2);
+      lines.push(`${r.periode} (${pctStr}%): _${fmtRp(r.cicilan)}/bulan_`);
+    });
+    lines.push('');
+    lines.push('_Catatan: cicilan di atas estimasi flat/annuitas, angka final mengikuti perhitungan bank saat pengajuan KPR._');
+    return lines.join('\n');
+  }
+
+  document.getElementById('waBtn').addEventListener('click', () => {
+    const text = buildWaText();
+    const url = 'https://wa.me/?text=' + encodeURIComponent(text);
+    window.open(url, '_blank');
+  });
+
+  // init
+  hargaEl.value = fmtInputRp(state.harga);
+  dpNominalEl.value = fmtInputRp(state.dpNominal);
+  tandaJadiEl.value = fmtInputRp(state.tandaJadi);
+  renderRateInputs();
+  render();
+</script>
+</body>
+</html>
