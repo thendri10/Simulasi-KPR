@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Simulasi KPR</title>
+<title>SIMULASI KPR</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -135,6 +135,43 @@
   }
   .stage-row .rp-input{ flex: 1; }
 
+  .stage-block{
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 10px 11px;
+    margin-bottom: 10px;
+    background: #FBFCFB;
+  }
+  .stage-block:last-child{ margin-bottom: 0; }
+  .stage-block-head{
+    display:flex; align-items:center; gap: 8px; margin-bottom: 9px;
+  }
+  .stage-badge{
+    font-size: 10.5px; font-weight: 700; color: #fff; background: var(--emerald);
+    padding: 2px 8px; border-radius: 20px; flex-shrink: 0;
+  }
+  .stage-badge.lunas{ background: var(--gold); }
+  .stage-period{
+    font-size: 12.5px; font-weight: 600; color: var(--ink); flex: 1;
+  }
+  .stage-del{
+    border: none; background: transparent; color: var(--ink-soft);
+    font-size: 15px; cursor: pointer; padding: 2px 4px; line-height: 1;
+  }
+  .stage-block-inputs{ display:flex; gap: 8px; }
+  .mini-field{ flex: 1; }
+  .mini-field .rp-input{ padding: 0 10px; }
+  .mini-field .rp-input input{ font-size: 14px; padding: 8px 0; }
+  .mini-field .rp-input span{ font-size: 12px; }
+  .mini-label{ font-size: 10.5px; color: var(--ink-soft); font-weight: 600; margin-bottom: 4px; }
+
+  .add-stage-btn{
+    width: 100%; padding: 10px; border-radius: 9px;
+    border: 1.5px dashed var(--emerald); background: #EEF6F1; color: var(--emerald-deep);
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
+    margin-top: 2px;
+  }
+
   .lama-fix-wrap{ display:flex; align-items:center; gap: 10px; }
   .lama-fix-wrap input[type=range]{ flex: 1; }
   .lama-fix-val{
@@ -183,7 +220,7 @@
 <body>
 
   <h1>Simulasi KPR</h1>
-  <p class="lede">Untuk detail bisa hubungi Thendri — 082283120060</p>
+  <p class="lede">Untuk detail bisa hubungi Thendri - 082283120060</p>
 
   <div class="card">
     <h2>Data unit</h2>
@@ -317,6 +354,32 @@
     const v = parseFloat(String(str).replace(',', '.'));
     return isNaN(v) ? 0 : v;
   }
+  function fmtPct(rateDecimal){
+    return (rateDecimal*100).toFixed(2).replace('.', ',') + '%';
+  }
+
+  // Format angka ribuan sambil mengetik tanpa membuat kursor loncat ke akhir.
+  function wireRpInput(el, onChange){
+    el.addEventListener('input', () => {
+      const oldPos = el.selectionStart;
+      const oldVal = el.value;
+      const digitsBeforeCursor = oldVal.slice(0, oldPos).replace(/[^\d]/g, '').length;
+      const v = parseNum(oldVal);
+      const newVal = fmtInputRp(v);
+      el.value = newVal;
+      let count = 0, newPos = newVal.length;
+      if(digitsBeforeCursor === 0){
+        newPos = 0;
+      } else {
+        for(let i = 0; i < newVal.length; i++){
+          if(/\d/.test(newVal[i])) count++;
+          if(count === digitsBeforeCursor){ newPos = i + 1; break; }
+        }
+      }
+      el.setSelectionRange(newPos, newPos);
+      onChange(v);
+    });
+  }
 
   // ---------- state ----------
   let state = {
@@ -328,8 +391,13 @@
     tandaJadi: 20000000,
     tenor: 10,
     jenis: 'berjenjang',
-    rates: { s1: 3.88, s2: 8.88, s3: 10.88, flat: 7.77, fixAwal: 3.77, floating: 8.77 },
-    lamaFix: 3
+    rates: { flat: 7.77, fixAwal: 3.77, floating: 8.77 },
+    lamaFix: 3,
+    stages: [
+      { years: 3, rate: 3.88 },
+      { years: 3, rate: 8.88 },
+      { rate: 10.88 } // tahap terakhir: sampai lunas (tanpa "years")
+    ]
   };
   let lastResult = null;
 
@@ -341,12 +409,7 @@
 
   // ---------- basic inputs ----------
   const hargaEl = document.getElementById('harga');
-  hargaEl.addEventListener('input', () => {
-    const v = parseNum(hargaEl.value);
-    hargaEl.value = fmtInputRp(v);
-    state.harga = v;
-    render();
-  });
+  wireRpInput(hargaEl, v => { state.harga = v; render(); });
   hargaEl.addEventListener('blur', () => { hargaEl.value = fmtInputRp(state.harga); });
 
   const dpModeRow = document.getElementById('dpModeRow');
@@ -387,12 +450,7 @@
   });
 
   const dpNominalEl = document.getElementById('dpNominal');
-  dpNominalEl.addEventListener('input', () => {
-    const v = parseNum(dpNominalEl.value);
-    dpNominalEl.value = fmtInputRp(v);
-    state.dpNominal = v;
-    render();
-  });
+  wireRpInput(dpNominalEl, v => { state.dpNominal = v; render(); });
   dpNominalEl.addEventListener('blur', () => { dpNominalEl.value = fmtInputRp(state.dpNominal); });
 
   const tandaModeRow = document.getElementById('tandaModeRow');
@@ -406,12 +464,7 @@
   });
 
   const tandaJadiEl = document.getElementById('tandaJadi');
-  tandaJadiEl.addEventListener('input', () => {
-    const v = parseNum(tandaJadiEl.value);
-    tandaJadiEl.value = fmtInputRp(v);
-    state.tandaJadi = v;
-    render();
-  });
+  wireRpInput(tandaJadiEl, v => { state.tandaJadi = v; render(); });
   tandaJadiEl.addEventListener('blur', () => { tandaJadiEl.value = fmtInputRp(state.tandaJadi); });
 
   const tenorEl = document.getElementById('tenor');
@@ -420,6 +473,7 @@
     state.tenor = parseInt(tenorEl.value, 10);
     tenorVal.textContent = state.tenor + ' th';
     if(state.lamaFix > state.tenor) state.lamaFix = state.tenor;
+    if(state.jenis !== 'berjenjang') renderRateInputs();
     render();
   });
 
@@ -450,10 +504,7 @@
     const el = document.getElementById('rateInputs');
     let html = '';
     if(state.jenis === 'berjenjang'){
-      const t = state.tenor;
-      html += rateField('Tahun 1-' + Math.min(3,t), 's1', state.rates.s1);
-      if(t > 3) html += rateField('Tahun 4-' + Math.min(6,t), 's2', state.rates.s2);
-      if(t > 6) html += rateField('Tahun 7-' + t, 's3', state.rates.s3);
+      html += renderStageBlocks();
     } else if(state.jenis === 'flat'){
       html += rateField('Tahun 1-' + state.tenor, 'flat', state.rates.flat);
     } else if(state.jenis === 'floating'){
@@ -486,31 +537,139 @@
         render();
       });
     }
+
+    // ---- stage (Fix Berjenjang) wiring ----
+    el.querySelectorAll('input[data-stage-years]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const idx = parseInt(inp.dataset.stageYears, 10);
+        const raw = inp.value;
+        const v = parseInt(raw, 10);
+        // simpan nilai mentah dulu (boleh sementara kosong/0 saat masih mengetik),
+        // tanpa rebuild seluruh blok supaya fokus & kursor tidak hilang
+        state.stages[idx].years = (isNaN(v) || v < 1) ? v : v;
+        updateStageLabels();
+        render();
+      });
+      inp.addEventListener('blur', () => {
+        const idx = parseInt(inp.dataset.stageYears, 10);
+        let v = parseInt(inp.value, 10);
+        if(isNaN(v) || v < 1) v = 1;
+        state.stages[idx].years = v;
+        renderRateInputs();
+        render();
+      });
+    });
+    el.querySelectorAll('input[data-stage-rate]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const idx = parseInt(inp.dataset.stageRate, 10);
+        state.stages[idx].rate = parsePct(inp.value);
+        render();
+      });
+    });
+    el.querySelectorAll('button[data-stage-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.stageDel, 10);
+        state.stages.splice(idx, 1);
+        renderRateInputs();
+        render();
+      });
+    });
+    const addBtn = document.getElementById('addStageBtn');
+    if(addBtn){
+      addBtn.addEventListener('click', () => {
+        state.stages.splice(state.stages.length - 1, 0, { years: 2, rate: 5.00 });
+        renderRateInputs();
+        render();
+      });
+    }
+  }
+
+  function effYears(stage){
+    const v = parseInt(stage.years, 10);
+    return (isNaN(v) || v < 1) ? 1 : v;
+  }
+
+  function renderStageBlocks(){
+    let html = '';
+    let yearCursor = 1;
+    state.stages.forEach((stage, idx) => {
+      const isLast = idx === state.stages.length - 1;
+      const y = effYears(stage);
+      const periodLabel = isLast
+        ? `Tahun ${yearCursor}-lunas`
+        : `Tahun ${yearCursor}-${yearCursor + y - 1}`;
+      html += `<div class="stage-block">
+        <div class="stage-block-head">
+          <span class="stage-badge ${isLast ? 'lunas' : ''}">Tahap ${idx+1}</span>
+          <span class="stage-period" data-period-idx="${idx}">${periodLabel}</span>
+          ${state.stages.length > 1 ? `<button type="button" class="stage-del" data-stage-del="${idx}">✕</button>` : ''}
+        </div>
+        <div class="stage-block-inputs">
+          ${isLast ? '' : `
+          <div class="mini-field">
+            <div class="mini-label">Lama (th)</div>
+            <div class="rp-input small">
+              <input type="number" min="1" inputmode="numeric" data-stage-years="${idx}" value="${stage.years}">
+            </div>
+          </div>`}
+          <div class="mini-field">
+            <div class="mini-label">Bunga (%)</div>
+            <div class="rp-input small">
+              <input inputmode="decimal" data-stage-rate="${idx}" value="${stage.rate}">
+              <span>%</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      if(!isLast) yearCursor += y;
+    });
+    html += `<button type="button" class="add-stage-btn" id="addStageBtn">+ Tambah Tahap</button>`;
+    return html;
+  }
+
+  function updateStageLabels(){
+    let yearCursor = 1;
+    state.stages.forEach((stage, idx) => {
+      const isLast = idx === state.stages.length - 1;
+      const y = effYears(stage);
+      const periodLabel = isLast
+        ? `Tahun ${yearCursor}-lunas`
+        : `Tahun ${yearCursor}-${yearCursor + y - 1}`;
+      const span = document.querySelector(`[data-period-idx="${idx}"]`);
+      if(span) span.textContent = periodLabel;
+      if(!isLast) yearCursor += y;
+    });
   }
 
   // ---------- scheme calculators ----------
   function calcBerjenjang(plafond, tenor){
-    const r1 = state.rates.s1/100, r2 = state.rates.s2/100, r3 = state.rates.s3/100;
-    const basis = tenor*12;
+    const basis = tenor * 12;
     const rows = [];
-    const m1 = Math.min(3, tenor);
-    const M1 = annuityPayment(plafond, r1, basis);
-    rows.push({periode: `Tahun 1-${m1}`, bunga: r1, cicilan: M1});
-    let bal = balanceAfter(plafond, r1, basis, m1*12);
+    let bal = plafond;
+    let monthsUsed = 0;
+    let yearCursor = 1;
 
-    if(tenor > 3){
-      const m2 = Math.min(6, tenor) - 3;
-      const M2 = annuityPayment(bal, r2, basis - 3*12);
-      rows.push({periode: `Tahun 4-${Math.min(6,tenor)}`, bunga: r2, cicilan: M2});
-      bal = balanceAfter(bal, r2, basis - 3*12, m2*12);
+    for(let i = 0; i < state.stages.length; i++){
+      const stage = state.stages[i];
+      const isLast = i === state.stages.length - 1;
+      const remainingMonths = basis - monthsUsed;
+      if(remainingMonths <= 0) break;
 
-      if(tenor > 6){
-        const M3 = annuityPayment(bal, r3, basis - 6*12);
-        rows.push({periode: `Tahun 7-${tenor}`, bunga: r3, cicilan: M3});
-        bal = balanceAfter(bal, r3, basis - 6*12, (tenor-6)*12);
-      }
+      const stageMonths = isLast ? remainingMonths : Math.min(effYears(stage) * 12, remainingMonths);
+      const r = stage.rate / 100;
+      const M = annuityPayment(bal, r, remainingMonths);
+      const periode = isLast
+        ? `Tahun ${yearCursor}-${tenor}`
+        : `Tahun ${yearCursor}-${yearCursor + Math.round(stageMonths/12) - 1}`;
+      rows.push({ periode, bunga: r, cicilan: M });
+
+      bal = balanceAfter(bal, r, remainingMonths, stageMonths);
+      monthsUsed += stageMonths;
+      yearCursor += Math.round(stageMonths/12);
+
+      if(isLast || monthsUsed >= basis) break;
     }
-    return {rows, note: 'Bunga tiap tahap diisi manual sesuai penawaran bank.', finalBalance: bal};
+    return {rows, note: 'Bunga & lama tiap tahap diisi manual sesuai penawaran bank.', finalBalance: bal};
   }
 
   function calcFlat(plafond, tenor){
@@ -590,7 +749,7 @@
     result.rows.forEach(r => {
       html += `<tr>
         <td>${r.periode}</td>
-        <td class="num"><span class="rate-pill">${r.bunga*100 % 1 === 0 ? (r.bunga*100).toFixed(0) : (r.bunga*100).toFixed(2)}%</span></td>
+        <td class="num"><span class="rate-pill">${fmtPct(r.bunga)}</span></td>
         <td class="num">${fmtRp(r.cicilan)}</td>
       </tr>`;
     });
@@ -638,8 +797,8 @@
     lines.push(`Skema Bunga: *${jenisLabel[state.jenis]}*`);
     lines.push('');
     result.rows.forEach(r => {
-      const pctStr = r.bunga*100 % 1 === 0 ? (r.bunga*100).toFixed(0) : (r.bunga*100).toFixed(2);
-      lines.push(`${r.periode} (${pctStr}%): _${fmtRp(r.cicilan)}/bulan_`);
+      const pctStr = fmtPct(r.bunga);
+      lines.push(`${r.periode} (${pctStr}): _${fmtRp(r.cicilan)}/bulan_`);
     });
     lines.push('');
     lines.push('_Catatan: cicilan di atas estimasi flat/annuitas, angka final mengikuti perhitungan bank saat pengajuan KPR._');
