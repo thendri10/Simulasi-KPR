@@ -940,49 +940,41 @@
     const isTermasuk = state.tandaJadiMode === 'termasuk';
 
     let lines = [];
-    lines.push('*Simulasi Kredit*');
+    lines.push('Simulasi Kredit');
     lines.push('');
     if(state.cluster.enabled){
-      lines.push(`Cluster: ${state.cluster.name || 'Belum dipilih'}`);
-      lines.push(`LT: ${state.cluster.lt ? `${state.cluster.lt} m²` : 'Belum diisi'}`);
-      lines.push(`LB: ${state.cluster.lb ? `${state.cluster.lb} m²` : 'Belum diisi'}`);
+      lines.push(`Cluster: _${state.cluster.name || 'Belum dipilih'}_`);
+      lines.push(`LT: *${state.cluster.lt ? `${state.cluster.lt} m²` : 'Belum diisi'}*`);
+      lines.push(`LB: *${state.cluster.lb ? `${state.cluster.lb} m²` : 'Belum diisi'}*`);
       lines.push('');
     }
 
-    if(hasTanda && isTermasuk){
-      lines.push(`Harga Rumah: *${fmtRp(state.harga)}*`);
-    } else {
-      lines.push(`Harga Rumah: ${fmtRp(state.harga)}`);
-    }
+    lines.push(`Harga Rumah: ${fmtRp(state.harga)}`);
     lines.push(`DP: ${fmtRp(dp)}`);
     if(hasTanda){
-      const label = isTermasuk ? '*(termasuk DP)*' : '*(di luar DP)*';
+      const label = isTermasuk ? '(termasuk DP)' : '(di luar DP)';
       lines.push(`Tanda Jadi: ${fmtRp(state.tandaJadi)} ${label}`);
       lines.push('');
       if(isTermasuk){
         const sisaDp = Math.max(dp - state.tandaJadi, 0);
-        lines.push(`Sisa DP yang dibayar: *${fmtRp(sisaDp)}*`);
+        lines.push(`Sisa DP yang dibayar: ${fmtRp(sisaDp)}`);
       }
     }
 
     if(state.cicilDp){
-      lines.push(`Cicil DP *${state.cicilDpCount}x* : _*${fmtRp(dp / Math.max(1, state.cicilDpCount))}/bulan*_`);
+      lines.push(`Cicil DP ${state.cicilDpCount}x : ${fmtRp(dp / Math.max(1, state.cicilDpCount))}/bulan`);
     }
 
-    if(hasTanda && !isTermasuk){
-      lines.push(`Plafond KPR: _*${fmtRp(plafond)}*_`);
-    } else {
-      lines.push(`Plafond KPR: ${fmtRp(plafond)}`);
-    }
-    lines.push(`Tenor: *${state.tenor} tahun*`);
-    lines.push(`Skema Bunga: *${jenisLabel[state.jenis]}*`);
     lines.push('');
+    lines.push(`Plafond KPR: ${fmtRp(plafond)}`);
+    lines.push(`Tenor: ${state.tenor} tahun`);
+    lines.push(`Skema Bunga: ${jenisLabel[state.jenis]}`);
     result.rows.forEach(r => {
       const pctStr = fmtPct(r.bunga);
-      lines.push(`${r.periode} (${pctStr}): _${fmtRp(r.cicilan)}/bulan_`);
+      lines.push(`${r.periode} (${pctStr}): ${fmtRp(r.cicilan)}/bulan`);
     });
     lines.push('');
-    lines.push('_Catatan: cicilan di atas adalah estimasi metode annuitas. Pada skema fix berjenjang atau floating, cicilan dapat berubah; angka final mengikuti perhitungan bank saat pengajuan KPR._');
+    lines.push('Catatan: cicilan di atas adalah estimasi metode annuitas. Pada skema fix berjenjang atau floating, cicilan dapat berubah; angka final mengikuti perhitungan bank saat pengajuan KPR.');
     return lines.join('\n');
   }
 
